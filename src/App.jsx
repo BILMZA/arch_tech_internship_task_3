@@ -33,6 +33,7 @@ function App() { //this is the main component of the app. It manages the state a
   const [duration, setDuration] = useState(0)
   const [search, setSearch] = useState('')
   const [activeGenre, setActiveGenre] = useState('All tracks')
+  const [trackDurations, setTrackDurations] = useState({})
   const audioRef = useRef(null)
 
   const currentTrack = tracks.find((track) => track.id === currentTrackId) ?? tracks[0]
@@ -55,6 +56,15 @@ function App() { //this is the main component of the app. It manages the state a
       audio.pause()
     }
   }, [currentTrackId, isPlaying, volume])
+
+  useEffect(() => {
+    tracks.forEach((track) => {
+      const audio = new Audio(track.audio)
+      audio.addEventListener('loadedmetadata', () => {
+        setTrackDurations((prev) => ({ ...prev, [track.id]: formatTime(audio.duration) }))
+      })
+    })
+  }, [])
 
   const selectTrack = (trackId) => { // This function is used to select a track and start playing it.
     setCurrentTrackId(trackId)
@@ -114,7 +124,7 @@ function App() { //this is the main component of the app. It manages the state a
           <div className="genre-list" aria-label="Filter by genre">{genres.map((genre) => <button className={activeGenre === genre ? 'genre active' : 'genre'} key={genre} onClick={() => setActiveGenre(genre)}>{genre}</button>)}</div>
           <div className="track-list">
             {visibleTracks.length ? visibleTracks.map((track, index) => <button className={track.id === currentTrackId ? 'track-row selected' : 'track-row'} key={track.id} onClick={() => selectTrack(track.id)}>
-              <span className="track-number">{track.id === currentTrackId && isPlaying ? '♫' : String(index + 1).padStart(2, '0')}</span><span className="track-cover" style={{ backgroundColor: track.color }}>{track.title.charAt(0)}</span><span className="track-info"><strong>{track.title}</strong><small>{track.artist}</small></span><span className="track-genre">{track.genre}</span><span className="track-duration">{track.duration}</span><span className="more">···</span>
+              <span className="track-number">{track.id === currentTrackId && isPlaying ? '♫' : String(index + 1).padStart(2, '0')}</span><span className="track-cover" style={{ backgroundColor: track.color }}>{track.title.charAt(0)}</span><span className="track-info"><strong>{track.title}</strong><small>{track.artist}</small></span><span className="track-genre">{track.genre}</span><span className="track-duration">{trackDurations[track.id] || track.duration}</span><span className="more">···</span>
             </button>) : <p className="empty-state">No tracks match that search.</p>}
           </div>
         </div>
